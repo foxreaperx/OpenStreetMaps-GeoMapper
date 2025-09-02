@@ -1,0 +1,61 @@
+2025-08-17 02:12:01,839 INFO OSMnx Projected GeoDataFrame to 'EPSG:32761 / WGS 84 / UPS South (N,E)'
+2025-08-17 02:12:01,841 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:12:01,873 INFO OSMnx Projected GeoDataFrame to 'EPSG:32623 / WGS 84 / UTM zone 23N'
+2025-08-17 02:12:01,986 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:12:01,990 INFO OSMnx Requesting data from API in 280 request(s)
+2025-08-17 02:12:03,013 INFO OSMnx Resolved 'overpass.kumi.systems' to '193.219.97.30'
+2025-08-17 02:12:03,548 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:12:03,549 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass.kumi.systems'
+2025-08-17 02:14:01,658 INFO OSMnx Projected GeoDataFrame to 'EPSG:32761 / WGS 84 / UPS South (N,E)'
+2025-08-17 02:14:01,660 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:14:01,693 INFO OSMnx Projected GeoDataFrame to 'EPSG:32623 / WGS 84 / UTM zone 23N'
+2025-08-17 02:14:01,807 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:14:01,811 INFO OSMnx Requesting data from API in 280 request(s)
+2025-08-17 02:14:01,818 INFO OSMnx Resolved 'overpass.kumi.systems' to '193.219.97.30'
+2025-08-17 02:14:02,364 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:14:02,364 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass.kumi.systems'
+2025-08-17 02:15:02,364 INFO OSMnx Post https://overpass.kumi.systems/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2737.703153+-122.346899+37.702847+-122.349101+37.702934+-122.349114+37.703021+-122.349117+37.703108+-122.349109+37.703193+-122.349091+37.703277+-122.349062+37.978583+-122.243647+37.978001+-122.241638+37.703153+-122.346899%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:15:02,366 INFO OSMnx Resolved 'overpass.kumi.systems' to '193.219.97.30'
+2025-08-17 02:15:07,607 INFO OSMnx Projected GeoDataFrame to 'EPSG:32761 / WGS 84 / UPS South (N,E)'
+2025-08-17 02:15:07,609 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:15:07,641 INFO OSMnx Projected GeoDataFrame to 'EPSG:32623 / WGS 84 / UTM zone 23N'
+2025-08-17 02:15:07,752 INFO OSMnx Projected GeoDataFrame to 'EPSG:4326 / WGS 84'
+2025-08-17 02:15:07,756 INFO OSMnx Requesting data from API in 280 request(s)
+2025-08-17 02:15:07,760 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:15:08,271 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:15:08,271 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'
+2025-08-17 02:16:08,272 INFO OSMnx Post https://overpass-api.de/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2737.703153+-122.346899+37.702847+-122.349101+37.702934+-122.349114+37.703021+-122.349117+37.703108+-122.349109+37.703193+-122.349091+37.703277+-122.349062+37.978583+-122.243647+37.978001+-122.241638+37.703153+-122.346899%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:16:08,275 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:16:09,689 INFO OSMnx Downloaded 526.9kB from 'overpass-api.de' with status 200
+2025-08-17 02:16:09,727 INFO OSMnx Saved response to cache file 'osm_cache\\04ae516b48e7428f35e90f9b162746a3d00e7054.json'
+2025-08-17 02:16:09,735 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:16:10,236 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:16:10,236 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'
+2025-08-17 02:17:10,237 INFO OSMnx Post https://overpass-api.de/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2737.978583+-122.243647+38.255857+-122.136754+38.255271+-122.134725+37.978001+-122.241638+37.978583+-122.243647%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:17:10,239 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:17:11,414 INFO OSMnx Downloaded 370.5kB from 'overpass-api.de' with status 200
+2025-08-17 02:17:11,422 INFO OSMnx Saved response to cache file 'osm_cache\\fc417c5b4cdb307c577d13fa63d452d7adf8b57b.json'
+2025-08-17 02:17:11,427 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:17:12,006 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:17:12,006 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'
+2025-08-17 02:18:12,006 INFO OSMnx Post https://overpass-api.de/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2738.255857+-122.136754+38.534703+-122.028507+38.534111+-122.026459+38.255271+-122.134725+38.255857+-122.136754%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:18:12,008 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:18:12,844 INFO OSMnx Downloaded 149.9kB from 'overpass-api.de' with status 200
+2025-08-17 02:18:12,846 INFO OSMnx Saved response to cache file 'osm_cache\\600df7f2f1a96c3dbc8986dbb0c374c008ba711f.json'
+2025-08-17 02:18:12,849 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:18:13,406 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:18:13,406 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'
+2025-08-17 02:19:13,406 INFO OSMnx Post https://overpass-api.de/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2738.534703+-122.028507+38.815118+-121.918877+38.814522+-121.916810+38.534111+-122.026459+38.534703+-122.028507%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:19:13,408 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:19:14,014 INFO OSMnx Downloaded 48.7kB from 'overpass-api.de' with status 200
+2025-08-17 02:19:14,016 INFO OSMnx Saved response to cache file 'osm_cache\\0addb43ae2ceddc7f23092519e555c7c890a0338.json'
+2025-08-17 02:19:14,018 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:19:14,521 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:19:14,521 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'
+2025-08-17 02:20:14,521 INFO OSMnx Post https://overpass-api.de/api/interpreter/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A600%5D%3B%28way%5B%22highway%22%5D%5B%22area%22%21~%22yes%22%5D%5B%22access%22%21~%22private%22%5D%5B%22highway%22%21~%22abandoned%7Cbridleway%7Cbus_guideway%7Cconstruction%7Ccorridor%7Ccycleway%7Celevator%7Cescalator%7Cfootway%7Cno%7Cpath%7Cpedestrian%7Cplanned%7Cplatform%7Cproposed%7Craceway%7Crazed%7Crest_area%7Cservice%7Cservices%7Csteps%7Ctrack%22%5D%5B%22motor_vehicle%22%21~%22no%22%5D%5B%22motorcar%22%21~%22no%22%5D%5B%22service%22%21~%22alley%7Cdriveway%7Cemergency_access%7Cparking%7Cparking_aisle%7Cprivate%22%5D%28poly%3A%2738.815118+-121.918877+39.097104+-121.807837+39.096502+-121.805749+38.814522+-121.916810+38.815118+-121.918877%27%29%3B%3E%3B%29%3Bout%3B with timeout=600
+2025-08-17 02:20:14,522 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:20:15,275 INFO OSMnx Downloaded 92.4kB from 'overpass-api.de' with status 200
+2025-08-17 02:20:15,280 INFO OSMnx Saved response to cache file 'osm_cache\\b10681d8150aac184a97773c04fb087d9e3bf226.json'
+2025-08-17 02:20:15,286 INFO OSMnx Resolved 'overpass-api.de' to '65.109.112.52'
+2025-08-17 02:20:15,869 ERROR OSMnx Unrecognized server status: '<head>'
+2025-08-17 02:20:15,869 INFO OSMnx Pausing 60 second(s) before making HTTP POST request to 'overpass-api.de'

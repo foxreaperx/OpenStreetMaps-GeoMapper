@@ -1,0 +1,40 @@
+area:
+  place_name: "Santa Cruz, California, USA"
+  bbox:
+    north: 36.9779
+    south: 36.9691
+    east: -122.0240
+    west: -122.0319
+
+# area:
+#   place_name: "San Francisco, California, USA"
+#   bbox:
+#     north: 37.7967
+#     south: 37.7872
+#     east: -122.4036
+#     west: -122.3943
+
+
+# Buffer settings (unchanged from your original)
+buffers:
+  road_width: 4                # Meters
+  sidewalk_width: 3.5            # Meters
+  sidewalk_offset: -3.5          # Meters (negative = left side)
+  crosswalk_width: 4.5         # Width of crosswalk markings (meters)
+  crosswalk_length: 8          # Length across the road (meters)
+  crosswalk_search_radius: 8   # How far to look for connecting sidewalks (meters)
+
+# Expanded output paths
+output:
+  # Original outputs (preserved)
+  streets_houses: "outputs/streets_houses.geojson"
+  sidewalks_crosswalks: "outputs/sidewalks_crosswalks.geojson"
+  
+  # New outputs for enhanced data
+  roads: "outputs/raw_roads.geojson"
+  sidewalks: "outputs/raw_sidewalks.geojson"
+  crosswalks: "outputs/raw_crosswalks.geojson"
+  curb_ramps: "outputs/raw_curb_ramps.geojson"
+  pedestrian_zones: "outputs/raw_pedestrian_zones.geojson"
+  buildings: "outputs/raw_buildings.geojson"
+  street_furniture: "outputs/raw_street_furniture.geojson"

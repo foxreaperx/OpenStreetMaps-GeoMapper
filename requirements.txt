@@ -1,0 +1,5 @@
+﻿osmnx>=1.0
+geopandas>=0.10
+shapely>=2.0
+pyyaml>=6.0
+folium>=0.14
