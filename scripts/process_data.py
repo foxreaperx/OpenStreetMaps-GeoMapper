@@ -20,6 +20,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @contextmanager
+# Purpose: Context manager to log the start and end of a processing step with elapsed time.
+# Inputs:
+# - label (str): Human readable step label to include in log messages.
+# Outputs:
+# - None. Produces INFO log lines when entering and leaving the context.
 def log_step(label: str):
     """Log start/end and wall time of a processing step."""
     logger.info(f"[START] {label}")
@@ -102,6 +107,12 @@ CROSSWALK_FALLBACKS = {
 }
 
 # -------------------- Utilities --------------------
+# Purpose: Determine whether a rectangle crosses a road polygon from curb to curb.
+# Inputs:
+# - rect (Polygon): Candidate rectangle.
+# - roads_union_poly (Polygon/MultiPolygon): Unary union of street polygons in LOCAL_CRS.
+# Outputs:
+# - bool: True when the rectangle intersects the road boundary in two or more distinct places.
 def _touches_road_both_curbs(rect, roads_union_poly) -> bool:
     if not rect or rect.is_empty or not roads_union_poly or roads_union_poly.is_empty:
         return False
@@ -118,6 +129,11 @@ def _touches_road_both_curbs(rect, roads_union_poly) -> bool:
         geoms = [g for g in getattr(inter, "geoms", []) if g.geom_type in ("LineString","MultiLineString")]
     return len(geoms) >= 2  # hits two distinct curb lines
 
+# Purpose: Return the midpoints of the two shortest edges of a rectangle.
+# Inputs:
+# - rect (Polygon): Minimum rotated rectangle or similar four-sided polygon in LOCAL_CRS.
+# Outputs:
+# - list[Point]: Up to two midpoints ordered from the shorter edge to the next.
 def _short_edge_midpoints(rect):
     if rect is None or rect.is_empty:
         return []
@@ -137,6 +153,11 @@ def _short_edge_midpoints(rect):
         mids.append(Point((p.x+q.x)/2.0, (p.y+q.y)/2.0))
     return mids
 
+# Purpose: Compute the long and short side lengths of a polygon’s minimum rotated rectangle.
+# Inputs:
+# - poly (Polygon or MultiPolygon): Input polygon in any CRS.
+# Outputs:
+# - tuple[float, float]: (long_side, short_side) in CRS units.
 def _mrr_lengths(poly):
     """Return (L, S) = long and short side lengths of min rotated rect."""
     if poly is None or poly.is_empty:
@@ -149,6 +170,15 @@ def _mrr_lengths(poly):
     L = max(sides); S = min(sides)
     return (float(L), float(S))
 
+# Purpose: Validate a crosswalk rectangle against orientation, length, and aspect-ratio limits.
+# Inputs:
+# - rect (Polygon): Candidate rectangle.
+# - pt (Point): Seed point on the associated road line.
+# - road_line (LineString): Road centerline in LOCAL_CRS.
+# - span (float): Curb-to-curb distance in meters.
+# - stripe_w (float): Crosswalk width in meters.
+# Outputs:
+# - bool: True when the rectangle meets all geometric constraints.
 def _is_good_crosswalk_rect(rect, pt, road_line, span, stripe_w):
     """Gate stripes by orientation, length, and aspect ratio."""
     if rect is None or rect.is_empty or road_line is None or road_line.is_empty:
@@ -169,6 +199,11 @@ def _is_good_crosswalk_rect(rect, pt, road_line, span, stripe_w):
               float(CROSSWALK_SHAPE_LIMITS["max_abs_length_m"]))
     return L <= cap
 
+# Purpose: Check whether an OSM 'highway' value is considered drivable for crosswalk placement.
+# Inputs:
+# - hw (str): Highway tag value (e.g., 'primary','residential','service').
+# Outputs:
+# - bool: True when the tag is in the configured drivable set and not excluded by service rules.
 def _is_drivable_highway(hw: str) -> bool:
     hw = (hw or "").lower()
     if hw not in DRIVABLE_HIGHWAYS:
@@ -177,6 +212,13 @@ def _is_drivable_highway(hw: str) -> bool:
         return False
     return True
 
+# Purpose: Approximate the road network degree at a point by counting nearby road segments.
+# Inputs:
+# - pt (Point): Location in LOCAL_CRS.
+# - roads_local (GeoDataFrame): Road centerlines in LOCAL_CRS.
+# - radius (float): Search radius in meters.
+# Outputs:
+# - int: Count of segments whose distance to pt is less than or equal to radius.
 def _local_road_degree(pt: Point, roads_local: gpd.GeoDataFrame, radius: float) -> int:
     """Approximate 'intersection-ness': count road segments whose geometry is within radius of the point."""
     if roads_local.empty:
@@ -188,6 +230,13 @@ def _local_road_degree(pt: Point, roads_local: gpd.GeoDataFrame, radius: float) 
     cand = roads_local.iloc[idxs]
     return int((cand.distance(pt) <= radius).sum())
 
+# Purpose: Drop polygons below a minimum area threshold after projecting to a local metric CRS.
+# Inputs:
+# - gdf (GeoDataFrame): Polygonal layer in any CRS.
+# - min_area_m2 (float): Minimum area in square meters to keep.
+# - crs_local (str): Local projected CRS used for measuring area.
+# Outputs:
+# - GeoDataFrame: Filtered polygons returned in the original CRS.
 def remove_small_polygons(gdf: gpd.GeoDataFrame, min_area_m2=0.5, crs_local: str = None):
     if gdf.empty:
         return gdf
@@ -197,6 +246,13 @@ def remove_small_polygons(gdf: gpd.GeoDataFrame, min_area_m2=0.5, crs_local: str
     local = local.loc[keep].copy()
     return local.to_crs(WGS84)
 
+# Purpose: Morphologically close narrow gaps within sidewalk polygons by buffer in and buffer out.
+# Inputs:
+# - gdf (GeoDataFrame): Sidewalk polygons in any CRS.
+# - gap_m (float): Gap size in meters to close (buffer distance applied in LOCAL_CRS).
+# - crs_local (str): Local projected CRS in meters.
+# Outputs:
+# - GeoDataFrame: Cleaned sidewalk polygons returned in the original CRS.
 def close_sidewalk_gaps(sidewalks_poly_ll: gpd.GeoDataFrame, gap_m=0.18) -> gpd.GeoDataFrame:
     if sidewalks_poly_ll.empty:
         return sidewalks_poly_ll
@@ -205,6 +261,11 @@ def close_sidewalk_gaps(sidewalks_poly_ll: gpd.GeoDataFrame, gap_m=0.18) -> gpd.
     sw_l["geometry"] = sw_l.geometry.apply(_fix_geom)
     return sw_l.to_crs(WGS84)
 
+# Purpose: Keep polygonal features only and dissolve multipart polygons to simple polygons where applicable.
+# Inputs:
+# - gdf (GeoDataFrame): Mixed-geometry layer.
+# Outputs:
+# - GeoDataFrame: Only Polygon/MultiPolygon geometries, invalids fixed with buffer(0), in the original CRS.
 def ensure_polygons_only(gdf: gpd.GeoDataFrame, *, log_label: str = "layer") -> gpd.GeoDataFrame:
     """Return a copy containing only Polygon geometries (explode MultiPolygons, drop others)."""
     if gdf is None or gdf.empty:
@@ -222,6 +283,14 @@ def ensure_polygons_only(gdf: gpd.GeoDataFrame, *, log_label: str = "layer") -> 
     logger.info(f"{log_label}: kept {len(poly_only)} polygons (dropped {dropped} non-polygons).")
     return poly_only
 
+# Purpose: Return up to 'maxn' road segments within a radius of a point, ordered by distance.
+# Inputs:
+# - pt (Point): Query point in LOCAL_CRS.
+# - roads_local (GeoDataFrame): Road centerlines in LOCAL_CRS with a spatial index.
+# - radius_m (float): Search radius in meters.
+# - maxn (int): Maximum number of candidates to return.
+# Outputs:
+# - list[pandas.NamedTuple]: Road rows with attributes, closest first.
 def _nearby_roads(pt: Point, roads_local: gpd.GeoDataFrame, radius_m=20.0, maxn=6):
     if roads_local.empty:
         return []
@@ -233,6 +302,15 @@ def _nearby_roads(pt: Point, roads_local: gpd.GeoDataFrame, radius_m=20.0, maxn=
     cand = cand.sort_values("__dist").head(maxn)
     return list(cand.itertuples(index=True))
 
+# Purpose: Score a candidate crosswalk rectangle using curb or sidewalk connectivity, closeness to target span, and road overlap.
+# Inputs:
+# - rect (Polygon): Candidate rectangle in LOCAL_CRS.
+# - roads_union_poly (Polygon/MultiPolygon): Road-union polygon in LOCAL_CRS.
+# - sw_union (geometry): Union of sidewalk and pedestrian-zone boundaries in LOCAL_CRS.
+# - span (float): Target curb-to-curb width in meters.
+# - attr_w (float): Attribute-based width estimate in meters used for closeness.
+# Outputs:
+# - tuple[int,float,float]: (touches_score, closeness_score, road_overlap_area).
 def _score_stripe(rect, roads_union_poly, sw_union, span=None, attr_w=None):
     if rect is None or rect.is_empty:
         return (-1, -1e9, 0.0)
@@ -247,6 +325,11 @@ def _score_stripe(rect, roads_union_poly, sw_union, span=None, attr_w=None):
         closeness = -abs(np.log((float(span) + 1e-6) / (float(attr_w) + 1e-6)))
     return (touches_score, float(closeness), float(road_overlap))
 
+# Purpose: Parse an OSM 'lanes' value to a numeric lane count.
+# Inputs:
+# - x (any): Raw lanes attribute. Accepts single numeric strings or semicolon-separated lists.
+# Outputs:
+# - float or numpy.nan: Parsed lane count (mean for lists) or NaN when parsing fails.
 def _parse_lanes(x):
     try:
         if x is None: return np.nan
@@ -258,17 +341,36 @@ def _parse_lanes(x):
     except Exception:
         return np.nan
 
+# Purpose: Estimate total curb-to-curb width from highway hierarchy and lane count attributes.
+# Inputs:
+# - hw (str): OSM 'highway' value.
+# - lanes (any): OSM 'lanes' value.
+# Outputs:
+# - float: Width in meters computed from configured hierarchy widths and per-lane plus parking assumptions.
 def _infer_total_width_from_attrs(hw: str, lanes) -> float:
     base = float(HIER.get((hw or "").lower(), BUFFERS["road_width"]))
     lanes_val = _parse_lanes(lanes)
     return max(base, lanes_val * LANE_W + 2 * PARK_W) if not np.isnan(lanes_val) else base
 
 
+# Purpose: Row-wise helper to compute total road width with a minimum when no nearest-attribute join occurred.
+# Inputs:
+# - row (pandas.Series): Contains 'highway', 'lanes', and optionally 'nearest_dist' from the join.
+# Outputs:
+# - float: Width in meters.
 def infer_total_road_width(row) -> float:
     base = _infer_total_width_from_attrs(row.get("highway"), row.get("lanes"))
     # If we *don't* have a nearest attribute join, keep a sane lower bound
     return base if not np.isnan(row.get("nearest_dist", np.nan)) else max(base, 12.0)
 
+# Purpose: Sample distances from a line to a polygon and return a robust percentile statistic.
+# Inputs:
+# - line (LineString): Query line in LOCAL_CRS.
+# - poly (Polygon or MultiPolygon): Target polygon in the same CRS.
+# - n (int): Number of evenly spaced samples along the line.
+# - q (float): Percentile in [0,100].
+# Outputs:
+# - float: The q-th percentile of point-to-polygon distances in CRS units.
 def _sample_line_dist_percentile(line: LineString, target_geom, n=8, q=0.25) -> float:
     if line.length == 0 or target_geom.is_empty:
         return np.inf
@@ -278,6 +380,14 @@ def _sample_line_dist_percentile(line: LineString, target_geom, n=8, q=0.25) -> 
         dists.append(pt.distance(target_geom))
     return float(np.percentile(dists, q * 100.0))
 
+# Purpose: Compute a road half-buffer width that preserves a minimum clear distance to buildings.
+# Inputs:
+# - geom (shapely.geometry.base.BaseGeometry): The road centerline or polygon in LOCAL_CRS units.
+# - building_union (shapely.geometry.base.BaseGeometry): Unary union of building footprints in the same CRS.
+# - desired_half (float): Desired half width in meters.
+# - min_sidewalk_clear (float): Minimum required clearance to buildings in meters.
+# Outputs:
+# - float: Half width in meters to use for buffering the road so as to respect the building setback.
 def adaptive_halfwidth(geom, building_union, desired_half: float, min_sidewalk_clear: float) -> float:
     d = _sample_line_dist_percentile(geom, building_union, n=8, q=0.25)
     if np.isinf(d):
@@ -285,6 +395,12 @@ def adaptive_halfwidth(geom, building_union, desired_half: float, min_sidewalk_c
     allowed = max(MIN_HALF_WIDTH, d - min_sidewalk_clear)
     return max(MIN_HALF_WIDTH, min(desired_half, allowed))
 
+# Purpose: Return a copy of the GeoDataFrame filtered to a single geometry family.
+# Inputs:
+# - gdf (GeoDataFrame): Any geometry type.
+# - geom_type (str): Geometry type to keep. One of 'Point','LineString','Polygon' (case-sensitive).
+# Outputs:
+# - GeoDataFrame: Same CRS as input, containing only features of the requested geometry family.
 def ensure_geom_type(gdf: gpd.GeoDataFrame, default_type: str, crs=WGS84) -> gpd.GeoDataFrame:
     """Return a GeoDataFrame with ['geometry','type'] present. If missing/empty, create safely."""
     if gdf is None or not hasattr(gdf, "columns") or len(gdf.columns) == 0:
@@ -307,6 +423,13 @@ except Exception:
         if g is None or g.is_empty: return g
         return g.buffer(0)
 
+# Purpose: Clean an entire GeoDataFrame’s geometries to remove micro slivers and invalid shapes.
+# Inputs:
+# - gdf (GeoDataFrame): Input layer.
+# - grid_size (float): Snap-round grid size to apply during make-valid, in CRS units.
+# - crs_local (str): Local projected CRS to use while cleaning when input is in WGS84.
+# Outputs:
+# - GeoDataFrame: Cleaned geometries, returned in the original CRS.
 def clean_geoms(gdf: gpd.GeoDataFrame, snap_round_m: float = 0.02, crs_local: str = None) -> gpd.GeoDataFrame:
     """Validate and snap-round polygons/lines to remove slivers/micro-gaps."""
     if gdf.empty: return gdf
@@ -318,6 +441,11 @@ def clean_geoms(gdf: gpd.GeoDataFrame, snap_round_m: float = 0.02, crs_local: st
         local["geometry"] = local.geometry.apply(_fix_geom)
         return local.to_crs(WGS84)
 
+# Purpose: Produce an empty geometry of the same family as the input geometry.
+# Inputs:
+# - geom (shapely geometry): Source geometry that determines the family (line-like or area-like).
+# Outputs:
+# - shapely geometry: Empty LineString for line-like inputs, empty Polygon for area-like inputs, empty GeometryCollection otherwise.
 def _empty_like(g):
     try:
         if isinstance(g, LineString):
@@ -328,6 +456,15 @@ def _empty_like(g):
         pass
     return LineString()
 
+# Purpose: Robust intersection that retries with increasing snap-rounding and safe fallbacks.
+# Inputs:
+# - a (shapely geometry): First operand.
+# - b (shapely geometry): Second operand.
+# - label (str): Label used in logs.
+# - grid_sizes (tuple[float|None,...]): Sequence of grid sizes to try during intersection.
+# - fallback (str): 'a' to return operand A if all attempts fail, 'empty' to return an empty geometry.
+# Outputs:
+# - shapely geometry: The intersection result, or the selected fallback.
 def _safe_intersection(a, b, *, label="", grid_sizes=(0.02, 0.05, 0.1, None), fallback="empty"):
     """Robust intersection with make-valid + snap-round fallbacks."""
     if a is None or b is None:
@@ -346,6 +483,12 @@ def _safe_intersection(a, b, *, label="", grid_sizes=(0.02, 0.05, 0.1, None), fa
     logger.warning(f"_safe_intersection fallback for {label}")
     return A if fallback == "a" else _empty_like(a)
 
+# Purpose: Measure the length of an intersection result, choosing the segment nearest to a reference point.
+# Inputs:
+# - geom (shapely geometry): Intersection result that be a LineString, MultiLineString, or collection.
+# - pt (Point): Reference point used to select the nearest piece.
+# Outputs:
+# - float: Length in CRS units of the selected line segment, or 0.0 if none.
 def _length_from_intersection(geom, pt):
     """Return length of line intersection; pick the piece closest to pt."""
     if geom.is_empty:
@@ -364,6 +507,13 @@ def _length_from_intersection(geom, pt):
     parts.sort(key=lambda g: g.distance(pt))
     return float(parts[0].length)
 
+# Purpose: Buffer with tolerance to minor geometry invalidities.
+# Inputs:
+# - geom (shapely geometry): Geometry to buffer.
+# - dist (float): Buffer distance in CRS units.
+# - **kwargs: Forwarded buffer options (cap_style, join_style, etc.).
+# Outputs:
+# - shapely geometry or None: Buffered geometry, or None if buffering fails after cleaning.
 def _safe_buffer(geom, dist, **kwargs):
     """Buffer that tolerates slightly invalid geometry."""
     if geom is None or getattr(geom, "is_empty", True):
@@ -377,6 +527,14 @@ def _safe_buffer(geom, dist, **kwargs):
             logger.debug("safe_buffer failed; returning None")
             return None
 
+# Purpose: Precompute and cache buffered versions of the road-union polygon for a range of overlap distances.
+# Inputs:
+# - roads_union_poly (Polygon or MultiPolygon): Unary-union of road polygons in LOCAL_CRS.
+# - start_overlap (float): Smallest overlap distance in meters.
+# - max_overlap (float): Largest overlap distance in meters.
+# - step_overlap (float): Step between consecutive overlap distances in meters.
+# Outputs:
+# - dict[float, shapely geometry]: Mapping from overlap distance to buffered polygon to reuse in loops.
 def _build_road_buffer_cache(roads_union_poly, start_overlap, max_overlap, step_overlap):
     """Pre-build road union buffers at overlap distances to avoid repeated buffering in loops."""
     if roads_union_poly is None or getattr(roads_union_poly, "is_empty", True):
@@ -395,6 +553,11 @@ def _build_road_buffer_cache(roads_union_poly, start_overlap, max_overlap, step_
     logger.info(f"Built road buffer cache in {time.perf_counter()-t0:.2f}s")
     return cache
 
+# Purpose: Log the approximate width and height of a latitude/longitude bounding box.
+# Inputs:
+# - north (float), south (float), east (float), west (float): Bounding box edges in degrees.
+# Outputs:
+# - None. Writes an INFO log line with the estimated size in kilometers.
 def describe_bbox(north, south, east, west):
     lat_mid = (north + south)/2
     h_km = (north - south) * 111.32
@@ -403,6 +566,13 @@ def describe_bbox(north, south, east, west):
     if h_km < 1 or w_km < 1:
         logger.warning("BBox is very small (<1 km); risk of empty clips.")
 
+# Purpose: Clip a layer by an axis-aligned bounding box in a target CRS.
+# Inputs:
+# - gdf (GeoDataFrame): Layer to clip.
+# - west (float), south (float), east (float), north (float): Bounding box coordinates in target CRS units.
+# - crs (str): Target CRS of the bbox extents. Default is 'EPSG:4326' (WGS84).
+# Outputs:
+# - GeoDataFrame: Subset of input features intersecting the bbox, in the given CRS.
 def clip_bbox(gdf, west, south, east, north, crs="EPSG:4326"):
     assert east > west and north > south, "BBox must satisfy east>west and north>south"
     describe_bbox(north, south, east, west)
@@ -410,6 +580,11 @@ def clip_bbox(gdf, west, south, east, north, crs="EPSG:4326"):
     return gpd.clip(gdf.to_crs(crs), bbox)
 
 # -------------------- I/O helper --------------------
+# Purpose: Read a geospatial file with CRS normalization and robust logging.
+# Inputs:
+# - path (Path): File path to load (GeoPackage, GeoJSON, Shapefile, etc.).
+# Outputs:
+# - GeoDataFrame: Loaded layer with CRS set to WGS84 if the file had no CRS.
 def safe_read(path: Path):
     if not path.exists():
         logger.warning(f"File {path} does not exist. Returning empty GeoDataFrame.")
@@ -422,6 +597,18 @@ def safe_read(path: Path):
     return gdf
 
 # -------------------- Street Fixer --------------------
+# Purpose: Snap, merge, and re-segment raw OSM road centerlines to produce clean linework with attributes.
+# Processing steps in LOCAL_CRS units:
+# - unary_union to dissolve overlapping lines
+# - snap to self to close tiny gaps within a tolerance
+# - linemerge to build topologically coherent lines
+# - explode to individual segments and drop empties
+# - attach nearest 'highway' and 'lanes' from original lines to each fixed segment
+# Inputs:
+# - roads (GeoDataFrame): Raw road centerlines in WGS84.
+# - tolerance (float): Snap tolerance in meters in LOCAL_CRS.
+# Outputs:
+# - GeoDataFrame: Cleaned road segments in WGS84 with columns ['geometry','highway','lanes','nearest_dist'].
 def fix_street_geometries(roads: gpd.GeoDataFrame, tolerance=2.0) -> gpd.GeoDataFrame:
     if roads.empty:
         return roads
@@ -471,6 +658,18 @@ def fix_street_geometries(roads: gpd.GeoDataFrame, tolerance=2.0) -> gpd.GeoData
     return out
 
 # -------------------- Road Buffering --------------------
+# Purpose: Buffer road centerlines to polygons using highway-specific base widths with context-sensitive adjustments.
+# Workflow in LOCAL_CRS units:
+# - Estimate total widths per segment from attributes and nearby geometry.
+# - Enforce a minimum centerline length along the sampling corridor.
+# - Apply adaptive_halfwidth near buildings to preserve clearances.
+# - Buffer each segment and dissolve to obtain road-asphalt polygons.
+# Inputs:
+# - roads_ll (GeoDataFrame): Road centerlines in WGS84 with 'highway' and 'lanes' where available.
+# - buildings_ll (GeoDataFrame): Building footprints in WGS84.
+# - min_centerline_len (float): Minimum usable centerline length in meters for buffering decisions.
+# Outputs:
+# - GeoDataFrame: Road polygons in WGS84 with column 'type' set to 'street'.
 def buffer_roads_hierarchical(roads_ll: gpd.GeoDataFrame, buildings_ll: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     if roads_ll.empty:
         return gpd.GeoDataFrame(geometry=[], crs=WGS84)
@@ -529,11 +728,23 @@ def buffer_roads_hierarchical(roads_ll: gpd.GeoDataFrame, buildings_ll: gpd.GeoD
     return out.to_crs(WGS84)
 
 # -------------------- Orientation helpers --------------------
+# Purpose: Compute the acute angular difference between two orientations modulo 180 degrees.
+# Inputs:
+# - a (float): Angle in degrees.
+# - b (float): Angle in degrees.
+# Outputs:
+# - float: Smallest difference in degrees within [0, 90].
 def _acute_diff_deg(a, b):
     """Smallest angular difference (0..90) for directions modulo 180°."""
     d = abs((a - b) % 180.0)
     return d if d <= 90.0 else 180.0 - d
 
+# Purpose: Compute the local tangent bearing (0 to 180 degrees) of a road line at the closest location to a point.
+# Inputs:
+# - pt (Point): Query point in the same CRS as the line.
+# - road_line (LineString): Road centerline.
+# Outputs:
+# - float or None: Bearing in degrees modulo 180, or None for a degenerate segment.
 def _bearing_at_point_on_line(pt: Point, road_line: LineString):
     """Road tangent bearing (0..180°) at the closest location to pt."""
     if road_line.is_empty or road_line.length == 0:
@@ -548,6 +759,12 @@ def _bearing_at_point_on_line(pt: Point, road_line: LineString):
     ang = np.degrees(np.arctan2(dy, dx)) % 180.0
     return ang
 
+# Purpose: Compute a unit normal vector that is perpendicular to the road line at the closest location to a point.
+# Inputs:
+# - pt (Point): Query point in the same CRS as the line.
+# - road_line (LineString): Road centerline.
+# Outputs:
+# - tuple[float,float] or None: (nx, ny) components of the unit normal, or None for a degenerate segment.
 def _normal_vector_at_point_on_line(pt: Point, road_line: LineString):
     """Unit normal (perpendicular) to the road at the seed point."""
     if road_line.is_empty or road_line.length == 0:
@@ -562,6 +779,11 @@ def _normal_vector_at_point_on_line(pt: Point, road_line: LineString):
         return None
     return (-vy / L, vx / L)
 
+# Purpose: Derive the orientation of a polygon’s long axis using its minimum rotated rectangle.
+# Inputs:
+# - poly (Polygon or MultiPolygon): Input polygon.
+# Outputs:
+# - float or None: Orientation of the long side in degrees modulo 180, or None if not computable.
 def _poly_major_axis_deg(poly):
     """Orientation (0..180°) of polygon’s long axis using its min-rotated-rect."""
     if poly is None or poly.is_empty:
@@ -581,6 +803,15 @@ def _poly_major_axis_deg(poly):
     except Exception:
         return None
 
+# Purpose: Build a crosswalk rectangle centered at a seed point and oriented perpendicular to the local road direction.
+# Inputs:
+# - pt (Point): Seed point on or near the road.
+# - road_line (LineString): Road centerline used to compute orientation.
+# - road_total_width (float): Curb-to-curb width in meters used to set the rectangle length.
+# - stripe_width (float): Crosswalk stripe width in meters.
+# - length_factor (float): Multiplier applied to road_total_width to size the rectangle length.
+# Outputs:
+# - Polygon or None: Oriented rectangle polygon, or None if the road geometry is degenerate.
 def _oriented_crosswalk_from_point(pt: Point, road_line: LineString,
                                    road_total_width: float, stripe_width: float,
                                    length_factor: float = 1.2):
@@ -599,6 +830,12 @@ def _oriented_crosswalk_from_point(pt: Point, road_line: LineString,
     rect = translate(rect, xoff=pt.x, yoff=pt.y)
     return rect
 
+# Purpose: Test whether a rectangle overlaps pedestrian boundaries on both of its short ends.
+# Inputs:
+# - rect (Polygon): Candidate crosswalk rectangle.
+# - sw_union (LineString/MultiLineString/Polygon): Unary union of sidewalk and pedestrian-zone boundaries in LOCAL_CRS.
+# Outputs:
+# - bool: True when the rectangle intersects pedestrian boundaries in at least two distinct places.
 def _touches_sidewalk_both_sides(rect, sw_union) -> bool:
     if sw_union is None or sw_union.is_empty or rect is None or rect.is_empty:
         return False
@@ -609,6 +846,17 @@ def _touches_sidewalk_both_sides(rect, sw_union) -> bool:
         return sum(1 for g in inter.geoms if not g.is_empty) >= 2
     return False
 
+# Purpose: Measure curb-to-curb width at a candidate location by intersecting a normal chord with the road union.
+# Inputs:
+# - pt (Point): Candidate point in LOCAL_CRS.
+# - road_line (LineString): Road centerline in LOCAL_CRS.
+# - roads_union_poly (Polygon/MultiPolygon): Unary union of road polygons in LOCAL_CRS.
+# - hw (str): OSM 'highway' value used for attribute fallback.
+# - lanes (any): OSM 'lanes' value used for attribute fallback.
+# - probe_len (float): Half length of the probing chord in meters.
+# - corridor_scale (float): Scale factor for the fallback corridor width.
+# Outputs:
+# - float: Estimated curb-to-curb width in meters; falls back to an attribute-based estimate when geometry probing fails.
 def _curb2curb_width_for_candidate(
     pt: Point,
     road_line: LineString,
@@ -641,6 +889,22 @@ def _curb2curb_width_for_candidate(
     L2 = _length_from_intersection(inter2, pt)
     return L2 if L2 > 0 else base
 
+# Purpose: Construct and quality-gate a crosswalk rectangle so as to connect curbs and, if present, sidewalks.
+# Algorithm:
+# - Build an oriented rectangle at the seed point using the road’s normal.
+# - Try multiple length factors and curb overlaps from the prebuilt road buffer cache.
+# - Prefer rectangles that touch sidewalks on both sides; otherwise keep the best clipped candidate.
+# Inputs:
+# - pt (Point): Candidate point in LOCAL_CRS.
+# - road_geom (LineString): Road centerline in LOCAL_CRS.
+# - span (float): Curb-to-curb distance in meters at the seed point.
+# - stripe_w (float): Crosswalk width in meters.
+# - sw_union (geometry): Union of sidewalks and pedestrian-zone boundaries in LOCAL_CRS.
+# - road_bufs (dict[float, geometry]): Cache of road-union buffers keyed by curb overlap in meters.
+# - grow_steps (Iterable[float] | None): Additional length factors to try.
+# - start_overlap (float), max_overlap (float), step_overlap (float): Overlap search range in meters.
+# Outputs:
+# - Polygon or None: Best crosswalk rectangle in LOCAL_CRS, clipped by the road buffers.
 def _make_stripe_connecting(
     pt: Point,
     road_geom: LineString,
@@ -705,7 +969,21 @@ def _make_stripe_connecting(
     return best
 
 
-# -------------------- Crosswalks (points/lines/polys → polygons) --------------------
+# -------------------- Crosswalks (points/lines/polys  to  polygons) --------------------
+# Purpose: Convert OSM crosswalk points and segments to oriented crosswalk polygons using road geometry and attributes.
+# Key steps in LOCAL_CRS:
+# - Build unions and spatial indexes for roads and sidewalks.
+# - For each crosswalk seed, select candidate road segments in a search radius.
+# - Filter candidates by drivable highway, road length near the seed, and intersection degree.
+# - Estimate curb-to-curb span using geometric probing with attribute fallbacks.
+# - Generate oriented rectangles, clip to road buffers, and keep the highest scoring candidate.
+# Inputs:
+# - crosswalks_ll (GeoDataFrame): Crosswalk points and/or short line segments in WGS84.
+# - roads_ll (GeoDataFrame): Cleaned road centerlines in WGS84 with 'highway' and 'lanes' columns if available.
+# - sidewalks_ll (GeoDataFrame): Sidewalk and pedestrian-zone polygons in WGS84.
+# - streets_poly_ll (GeoDataFrame): Road polygons in WGS84 to supply the union used for clipping.
+# Outputs:
+# - GeoDataFrame: Crosswalk polygons in WGS84 with column 'type' set to 'crosswalk'.
 def prepare_crosswalk_polygons_dynamic(
     crosswalks_ll: gpd.GeoDataFrame,
     roads_ll: gpd.GeoDataFrame,
@@ -826,7 +1104,7 @@ def prepare_crosswalk_polygons_dynamic(
                 logger.info(f"  … crosswalk seeds processed {done}/{n_pts} ({pct:.1f}%) in {time.perf_counter()-start:.1f}s")
                 last = time.perf_counter()
 
-        # LINES → buffer
+        # LINES to buffer
         cw_lines = cw[cw.geom_type.isin(["LineString","MultiLineString"])].copy()
         logger.info(f"Crosswalk line/multiline features: {len(cw_lines)}")
         for i, row in cw_lines.iterrows():
@@ -836,7 +1114,7 @@ def prepare_crosswalk_polygons_dynamic(
             except Exception:
                 missed.append(i)
 
-        # POLYGONS → clean
+        # POLYGONS to clean
         cw_polys = cw[cw.geom_type.isin(["Polygon","MultiPolygon"])].copy()
         logger.info(f"Crosswalk polygon/multipolygon features: {len(cw_polys)}")
         for i, row in cw_polys.iterrows():
@@ -859,6 +1137,13 @@ def prepare_crosswalk_polygons_dynamic(
     out = remove_small_polygons(out, min_area_m2=0.35, crs_local=LOCAL_CRS)
     return out
 
+# Purpose: Add short sidewalk connector polygons from crosswalk short-edge midpoints to the nearest pedestrian boundary.
+# Inputs:
+# - crosswalk_poly_ll (GeoDataFrame): Crosswalk rectangles in WGS84.
+# - sidewalks_ll (GeoDataFrame): Sidewalk polygons in WGS84.
+# - ped_zones_ll (GeoDataFrame): Pedestrian-only zones in WGS84.
+# Outputs:
+# - GeoDataFrame: Connector polygons in WGS84 with column 'type' set to 'sidewalk'.
 def add_crosswalk_connectors(crosswalk_poly_ll, sidewalks_ll, ped_zones_ll):
     if crosswalk_poly_ll.empty:
         return gpd.GeoDataFrame(geometry=[], crs=WGS84)
@@ -898,6 +1183,13 @@ def add_crosswalk_connectors(crosswalk_poly_ll, sidewalks_ll, ped_zones_ll):
     return out
 
 # -------------------- Crosswalk subtraction from streets --------------------
+# Purpose: Remove crosswalk rectangles from street polygons to avoid double counting and to leave road-asphalt only.
+# Inputs:
+# - roads_poly_ll (GeoDataFrame): Street polygons in WGS84.
+# - crosswalk_poly_ll (GeoDataFrame): Crosswalk polygons in WGS84.
+# - roads_lines_ll (GeoDataFrame | None): Optional road centerlines in WGS84 used to filter for near-perpendicular cuts.
+# Outputs:
+# - GeoDataFrame: Street polygons in WGS84 with crosswalk areas subtracted; column 'type' is ensured to be 'street'.
 def subtract_crosswalks_from_roads_localized(
     roads_poly_ll: gpd.GeoDataFrame,
     crosswalk_poly_ll: gpd.GeoDataFrame,
@@ -1019,6 +1311,13 @@ def subtract_crosswalks_from_roads_localized(
         return out
 
 # -------------------- QA metrics & flags --------------------
+# Purpose: Compute basic metrics for the processed layers.
+# Inputs:
+# - streets_poly_ll (GeoDataFrame): Street polygons in WGS84.
+# - sidewalks_out (GeoDataFrame): Sidewalk and connectors polygons in WGS84.
+# - crosswalk_poly_ll (GeoDataFrame): Crosswalk polygons in WGS84.
+# Outputs:
+# - dict: Summary including total areas in square kilometers and feature counts per layer.
 def summarize_layers(streets_poly_ll, sidewalks_out, crosswalk_poly_ll):
     def _area_km2(gdf):
         if gdf.empty: return 0.0
@@ -1036,6 +1335,13 @@ def summarize_layers(streets_poly_ll, sidewalks_out, crosswalk_poly_ll):
     logger.info(f"Metrics: {metrics}")
     return metrics
 
+# Purpose: Flag crosswalk polygons that are far from any road or that do not touch sidewalks.
+# Inputs:
+# - crosswalk_poly_ll (GeoDataFrame): Crosswalk polygons in WGS84.
+# - roads_ll (GeoDataFrame): Road centerlines in WGS84.
+# - sidewalks_ll (GeoDataFrame): Sidewalk polygons in WGS84.
+# Outputs:
+# - GeoDataFrame: Crosswalk polygons in WGS84 with boolean columns 'flag_far_from_road' and 'flag_not_touching_sidewalk'.
 def flag_crosswalk_anomalies(crosswalk_poly_ll, roads_ll, sidewalks_ll):
     """Flag crosswalks far from roads or not touching sidewalks."""
     if crosswalk_poly_ll.empty:
@@ -1053,6 +1359,19 @@ def flag_crosswalk_anomalies(crosswalk_poly_ll, roads_ll, sidewalks_ll):
     return cws.to_crs(WGS84)
 
 # -------------------- Main Processing --------------------
+# Purpose: End-to-end pipeline to read raw layers, normalize and clean linework and polygons, infer widths,
+#          generate crosswalk polygons, subtract crosswalks from streets, and write processed outputs.
+# Inputs:
+# - None. Reads files from the project's 'outputs' directory:
+#   raw_roads.geojson, raw_sidewalks.geojson, raw_crosswalks.geojson,
+#   raw_curb_ramps.geojson, raw_buildings.geojson, raw_pedestrian_zones.geojson
+# Outputs (written to 'outputs' directory):
+# - processed_streets_polygons.geojson: Road-asphalt polygons with type='street' (WGS84).
+# - processed_sidewalks_polygons.geojson: Sidewalk and connector polygons with type='sidewalk' (WGS84).
+# - processed_crosswalks_polygons.geojson: Crosswalk rectangles with type='crosswalk' (WGS84).
+# - processed_streets_buildings.geojson: Road polygons with building footprints (WGS84).
+# - processed_pedestrian_network.geojson: Combined pedestrian features (sidewalks, crosswalks, curb ramps, ped zones) (WGS84).
+# - metrics.json: Summary metrics for the above layers.
 def process_data():
     logger.info("Starting processing pipeline…")
     project_root = Path(__file__).parent.parent
@@ -1100,7 +1419,7 @@ def process_data():
         if not ped_out.empty and "type" not in ped_out.columns:
             ped_out = ped_out.assign(type="pedestrian_zone")
 
-    # Build crosswalk → sidewalk connectors AFTER ped_out exists
+    # Build crosswalk  to  sidewalk connectors AFTER ped_out exists
     with log_step("Build crosswalk→sidewalk connectors (fallback)"):
         try:
             connectors = add_crosswalk_connectors(crosswalk_poly_ll, sidewalks_out, ped_out)

@@ -78,7 +78,7 @@ def fetch_data():
     ped_zones.to_file(outputs_dir / "raw_pedestrian_zones.geojson", driver="GeoJSON")
     buildings.to_file(outputs_dir / "raw_buildings.geojson", driver="GeoJSON")
 
-    print("✅ All data saved to /outputs")
+    print("All data saved to /outputs")
 
 if __name__ == "__main__":
     fetch_data()
