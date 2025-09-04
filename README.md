@@ -33,7 +33,12 @@ Edit **`config.yaml`**, for example:
 
 ```yaml
 area:
-  place_name: "San Francisco, California, USA"
+  place_name: "Santa Cruz, California, USA"
+  bbox:
+    north: 36.9779
+    south: 36.9691
+    east: -122.0240
+    west: -122.0319
 local_crs: "EPSG:32610"
 buffers:
   road_width: 10.0
@@ -47,13 +52,19 @@ python scripts/fetch_osm_data.py
 ```
 Saves raw GeoJSONs into `outputs/` (roads, sidewalks, crosswalks, buildings, etc.).
 
-### 4. Process data
+### 4. Clip raw OSM data to bbox
+```bash
+python scripts/clip.py
+```
+Saves raw GeoJSONs into location bounding box in config file
+
+### 5. Process data
 ```bash
 python scripts/process_data.py
 ```
 Generates cleaned **processed GeoJSON layers**: streets, sidewalks, crosswalks (with connectors), accessibility network.
 
-### 5. Visualize
+### 6. Visualize
 ```bash
 python scripts/visualize_data.py
 ```
